@@ -9,10 +9,12 @@ import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { Cart } from '../../models/cart.model';
 
+import { FormsModule } from '@angular/forms';
+
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
@@ -24,6 +26,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   categories = this.productService.categories;
   cart$: Observable<Cart>;
+
+  searchQuery = '';
+  showSearch = false;
 
   constructor(
     private authService: AuthService,
@@ -54,8 +59,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
+
+    // Close profile dropdown
     if (!target.closest('.profile-dropdown-container')) {
       this.showProfileDropdown = false;
+    }
+
+    // Close search bar if clicked outside and search bar is active
+    if (!target.closest('.search-bar-container') && this.showSearch) {
+      this.showSearch = false;
+      this.searchQuery = '';
     }
   }
 
@@ -64,4 +77,30 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.showProfileDropdown = false;
     this.router.navigate(['/login']);
   }
+
+  handleSearchClick() {
+    if (!this.showSearch) {
+      this.showSearch = true;
+    } else if (this.searchQuery.trim()) {
+      this.onSearch();
+    } else {
+      this.showSearch = false;
+    }
+  }
+
+  toggleSearch() {
+    this.showSearch = !this.showSearch;
+    if (!this.showSearch) {
+      this.searchQuery = '';
+    }
+  }
+
+  onSearch() {
+    if (this.searchQuery.trim()) {
+      this.router.navigate(['/search'], { queryParams: { keyword: this.searchQuery.trim() } });
+      this.showSearch = false;
+      this.searchQuery = '';
+    }
+  }
 }
+

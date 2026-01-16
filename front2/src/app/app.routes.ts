@@ -28,6 +28,7 @@ export const routes: Routes = [
     { path: 'categories', loadComponent: () => import('./features/categories/category-list/category-list.component').then(m => m.CategoryListComponent) },
     { path: 'categories/:slug', loadComponent: () => import('./features/categories/category-detail/category-detail.component').then(m => m.CategoryDetailComponent) },
     { path: 'products/:id', loadComponent: () => import('./features/products/product-detail/product-detail.component').then(m => m.ProductDetailComponent) },
+    { path: 'search', loadComponent: () => import('./features/products/search/search.component').then(m => m.SearchComponent) },
     { path: 'cart', loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent) },
     { path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent), canActivate: [authGuard] },
     { path: '**', redirectTo: '' }

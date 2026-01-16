@@ -161,4 +161,9 @@ export class ProductService {
     getStock(product: Product): number {
         return product.stockQuantity ?? product.stock ?? 0;
     }
+
+    // Search products
+    searchProducts(keyword: string): Observable<Product[]> {
+        return this.http.get<Product[]>(`${this.productUrl}/search?keyword=${keyword}`);
+    }
 }

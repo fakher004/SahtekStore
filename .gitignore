@@ -1,0 +1,19 @@
+# Common
+node_modules/
+.angular/
+dist/
+tmp/
+out-tsc/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Environment
+.env
+
+# Logs
+*.log

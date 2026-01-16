@@ -64,9 +64,13 @@
             </ul>
 
             <div class="navbar-actions">
-                <button class="btn-nav-action" type="button">
-                    <i class="bi bi-search"></i>
-                </button>
+                <div class="search-bar-container" [class.active]="showSearch">
+                    <button class="btn-nav-action" type="button" (click)="handleSearchClick()">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <input type="text" class="search-input" placeholder="Rechercher..." [(ngModel)]="searchQuery"
+                        (keyup.enter)="onSearch()">
+                </div>
                 <a class="btn-nav-action position-relative" routerLink="/cart">
                     <i class="bi bi-cart3"></i>
                     <span class="cart-badge" *ngIf="(cart$ | async)?.totalItems as count">{{ count }}</span>
