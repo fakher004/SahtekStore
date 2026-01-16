@@ -1,0 +1,190 @@
+package com.sahtek.sahtekexpress.service;
+
+import com.sahtek.sahtekexpress.dto.RegisterDTO;
+import com.sahtek.sahtekexpress.dto.UserDTO;
+import com.sahtek.sahtekexpress.entities.User;
+import com.sahtek.sahtekexpress.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class UserService implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // Inscription d'un nouvel utilisateur
+    public UserDTO register(RegisterDTO registerDTO) {
+        // Vérifier si l'email existe déjà
+        if (userRepository.existsByEmail(registerDTO.getEmail())) {
+            throw new RuntimeException("Email déjà utilisé: " + registerDTO.getEmail());
+        }
+
+        // Créer un nouvel utilisateur
+        User user = new User();
+        user.setFirstName(registerDTO.getFirstName());
+        user.setLastName(registerDTO.getLastName());
+        user.setEmail(registerDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(registerDTO.getPassword())); // Crypter le mot de passe
+        user.setPhone(registerDTO.getPhone());
+        user.setEnabled(true);
+        user.setRole("USER");
+
+        User savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
+    // Authentification simple (sans Spring Security pour l'instant)
+    public UserDTO login(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Vérifier le mot de passe
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Mot de passe incorrect");
+        }
+
+        if (!user.getEnabled()) {
+            throw new RuntimeException("Compte désactivé");
+        }
+
+        return convertToDTO(user);
+    }
+
+    // Récupérer tous les utilisateurs
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Récupérer un utilisateur par ID
+    public UserDTO getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+        return convertToDTO(user);
+    }
+
+    // Récupérer un utilisateur par email
+    public UserDTO getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec email: " + email));
+        return convertToDTO(user);
+    }
+
+    // Mettre à jour un utilisateur
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+
+        // Mettre à jour les champs
+        if (userDTO.getFirstName() != null) {
+            user.setFirstName(userDTO.getFirstName());
+        }
+        if (userDTO.getLastName() != null) {
+            user.setLastName(userDTO.getLastName());
+        }
+        if (userDTO.getPhone() != null) {
+            user.setPhone(userDTO.getPhone());
+        }
+        if (userDTO.getAddress() != null) {
+            user.setAddress(userDTO.getAddress());
+        }
+        if (userDTO.getCity() != null) {
+            user.setCity(userDTO.getCity());
+        }
+        if (userDTO.getPostalCode() != null) {
+            user.setPostalCode(userDTO.getPostalCode());
+        }
+        if (userDTO.getRole() != null) {
+            user.setRole(userDTO.getRole());
+        }
+        if (userDTO.getEnabled() != null) {
+            user.setEnabled(userDTO.getEnabled());
+        }
+
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
+
+    // Supprimer un utilisateur (soft delete)
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+        user.setEnabled(false);
+        userRepository.save(user);
+    }
+
+    // Rechercher des utilisateurs par nom
+    public List<UserDTO> searchUsers(String keyword) {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getEnabled())
+                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
+                        user.getLastName().toLowerCase().contains(keyword.toLowerCase()) ||
+                        user.getEmail().toLowerCase().contains(keyword.toLowerCase()))
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Changer le rôle d'un utilisateur
+    public UserDTO changeUserRole(Long id, String newRole) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+
+        user.setRole(newRole);
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
+
+    // Activer/désactiver un utilisateur
+    public UserDTO toggleUserStatus(Long id, boolean enabled) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+
+        user.setEnabled(enabled);
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec email: " + email));
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .roles(user.getRole())
+                .disabled(!user.getEnabled())
+                .build();
+    }
+
+    // Méthode pour convertir User -> UserDTO
+    private UserDTO convertToDTO(User user) {
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
+        dto.setAddress(user.getAddress());
+        dto.setCity(user.getCity());
+        dto.setPostalCode(user.getPostalCode());
+        dto.setRole(user.getRole());
+        dto.setEnabled(user.getEnabled());
+
+        return dto;
+    }
+}
