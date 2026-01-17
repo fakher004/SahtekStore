@@ -22,6 +22,8 @@ export const routes: Routes = [
             { path: 'products/add', component: ProductFormComponent },
             { path: 'products/edit/:id', component: ProductFormComponent },
             { path: 'orders', loadComponent: () => import('./features/admin/order-list/order-list.component').then(m => m.OrderListComponent) },
+            { path: 'analytics', loadComponent: () => import('./features/admin/analytics/analytics.component').then(m => m.AnalyticsComponent) },
+            { path: 'customers', loadComponent: () => import('./features/admin/customer-list/customer-list.component').then(m => m.CustomerListComponent) },
             { path: 'delivery', loadComponent: () => import('./features/admin/delivery/delivery.component').then(m => m.DeliveryComponent) }
         ]
     },

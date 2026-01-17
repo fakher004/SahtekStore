@@ -102,6 +102,11 @@
                                 <i class="bi bi-box-arrow-right me-2"></i>
                                 Déconnexion
                             </button>
+                            <a *ngIf="isAdmin" routerLink="/admin" class="dropdown-btn admin-nav-btn"
+                                (click)="showProfileDropdown = false">
+                                <i class="bi bi-shield-lock me-2"></i>
+                                Administratif
+                            </a>
                         </div>
 
                         <div *ngIf="!isLoggedIn" class="dropdown-content">

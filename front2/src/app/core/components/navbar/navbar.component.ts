@@ -27,6 +27,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   categories = this.productService.categories;
   cart$: Observable<Cart>;
 
+  get isAdmin(): boolean {
+    return this.currentUser?.role === 'ADMIN';
+  }
+
   searchQuery = '';
   showSearch = false;
 

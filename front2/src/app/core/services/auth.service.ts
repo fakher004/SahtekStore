@@ -62,6 +62,10 @@ export class AuthService {
         return user?.role === 'ADMIN';
     }
 
+    getAllUsers(): Observable<User[]> {
+        return this.http.get<User[]>(this.apiUrl);
+    }
+
     logout(): void {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

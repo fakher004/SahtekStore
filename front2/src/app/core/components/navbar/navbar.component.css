@@ -519,6 +519,20 @@
     transform: translateX(4px);
 }
 
+.admin-nav-btn {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    margin-top: 8px;
+}
+
+.admin-nav-btn:hover {
+    background: #0f172a;
+    color: white;
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
 .login-btn {
     background: var(--primary-gradient);
     color: white;
