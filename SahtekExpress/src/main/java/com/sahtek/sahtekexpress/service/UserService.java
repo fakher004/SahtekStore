@@ -11,8 +11,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -156,6 +158,36 @@ public class UserService implements UserDetailsService {
         user.setEnabled(enabled);
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
+    }
+
+    // Générer un token de réinitialisation et (simuler) l'envoi d'email
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Aucun utilisateur trouvé avec cet email."));
+
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(1)); // Expire dans 1 heure
+        userRepository.save(user);
+
+        // Ici, vous devriez envoyer l'email avec le lien :
+        // http://localhost:4200/reset-password?token=TOKEN
+        System.out.println("Lien de réinitialisation généré pour " + email + ": http://localhost:4200/reset-password?token=" + token);
+    }
+
+    // Réinitialiser le mot de passe avec le token
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Lien de réinitialisation invalide."));
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Le lien de réinitialisation a expiré.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
     }
 
     @Override
