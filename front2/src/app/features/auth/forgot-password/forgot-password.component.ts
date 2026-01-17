@@ -13,6 +13,9 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ForgotPasswordComponent {
     email: string = '';
+    pin: string = '';
+    newPassword: string = '';
+
     loading: boolean = false;
     submitted: boolean = false;
     errorMessage: string = '';
@@ -20,13 +23,18 @@ export class ForgotPasswordComponent {
     constructor(private http: HttpClient) { }
 
     onSubmit() {
-        if (!this.email) return;
+        if (!this.email || !this.pin || !this.newPassword) return;
 
         this.loading = true;
         this.errorMessage = '';
 
-        // Mock API call - this should be your Spring Boot endpoint
-        this.http.post('http://localhost:9002/sahtek_db/sahtek_db/api/users/forgot-password', { email: this.email })
+        const payload = {
+            email: this.email,
+            secretPin: this.pin,
+            newPassword: this.newPassword
+        };
+
+        this.http.post('http://localhost:9002/sahtek_db/sahtek_db/api/users/reset-password-pin', payload)
             .subscribe({
                 next: () => {
                     this.loading = false;
@@ -34,8 +42,12 @@ export class ForgotPasswordComponent {
                 },
                 error: (err) => {
                     this.loading = false;
-                    this.errorMessage = "Une erreur est survenue ou l'email est inconnu. Veuillez réesayer.";
-                    console.error('Forgot password error', err);
+                    if (err.status === 500 && err.error && err.error.message) {
+                        this.errorMessage = err.error.message; // Affiche "Code PIN incorrect" venant du backend
+                    } else {
+                        this.errorMessage = "Échec de la réinitialisation. Vérifiez votre email et votre code PIN.";
+                    }
+                    console.error('Reset PIN error', err);
                 }
             });
     }

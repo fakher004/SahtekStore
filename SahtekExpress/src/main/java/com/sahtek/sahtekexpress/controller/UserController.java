@@ -3,8 +3,8 @@ package com.sahtek.sahtekexpress.controller;
 import com.sahtek.sahtekexpress.dto.LoginDTO;
 import com.sahtek.sahtekexpress.dto.RegisterDTO;
 import com.sahtek.sahtekexpress.dto.UserDTO;
-import com.sahtek.sahtekexpress.dto.ForgotPasswordRequest;
-import com.sahtek.sahtekexpress.dto.ResetPasswordRequest;
+import com.sahtek.sahtekexpress.dto.ResetPasswordWithPinRequest;
+import com.sahtek.sahtekexpress.dto.ChangePasswordRequest;
 import com.sahtek.sahtekexpress.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,17 +34,17 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    // POST /api/users/forgot-password - Demander un lien de réinitialisation
-    @PostMapping("/forgot-password")
-    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        userService.forgotPassword(request.getEmail());
+    // POST /api/users/reset-password-pin - Réinitialiser avec PIN
+    @PostMapping("/reset-password-pin")
+    public ResponseEntity<Void> resetPasswordWithPin(@RequestBody ResetPasswordWithPinRequest request) {
+        userService.resetPasswordWithPin(request.getEmail(), request.getSecretPin(), request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 
-    // POST /api/users/reset-password - Réinitialiser le mot de passe
-    @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
-        userService.resetPassword(request.getToken(), request.getNewPassword());
+    // PUT /api/users/{id}/password - Changer le mot de passe (Profil)
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(id, request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 

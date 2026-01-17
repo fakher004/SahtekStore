@@ -6,18 +6,8 @@ public class RegisterDTO {
     private String email;
     private String password;
     private String phone;
+    private String secretPin; // New Field
 
-    // Constructeurs
-    public RegisterDTO() {}
-
-    public RegisterDTO(String firstName, String lastName, String email, String password) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-    }
-
-    // Getters et Setters
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
 
@@ -33,12 +23,6 @@ public class RegisterDTO {
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    @Override
-    public String toString() {
-        return "RegisterDTO{" +
-                "firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                '}';
-    }
+    public String getSecretPin() { return secretPin; }
+    public void setSecretPin(String secretPin) { this.secretPin = secretPin; }
 }

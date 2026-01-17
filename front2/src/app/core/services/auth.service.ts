@@ -66,6 +66,23 @@ export class AuthService {
         return this.http.get<User[]>(this.apiUrl);
     }
 
+    updateUser(id: number, user: Partial<User>): Observable<User> {
+        return this.http.put<User>(`${this.apiUrl}/${id}`, user).pipe(
+            tap(updatedUser => {
+                const currentUser = this.getUser();
+                if (currentUser && currentUser.id === updatedUser.id) {
+                    // Preserve token, just update user info
+                    this.saveUser(updatedUser);
+                    this.currentUserSubject.next(updatedUser);
+                }
+            })
+        );
+    }
+
+    changePassword(id: number, data: any): Observable<void> {
+        return this.http.put<void>(`${this.apiUrl}/${id}/password`, data);
+    }
+
     logout(): void {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

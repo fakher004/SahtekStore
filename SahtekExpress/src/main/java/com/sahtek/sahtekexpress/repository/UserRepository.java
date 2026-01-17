@@ -12,7 +12,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     // Trouver un utilisateur par token de réinitialisation
-    Optional<User> findByResetToken(String resetToken);
 
     // Vérifier si un email existe déjà
     boolean existsByEmail(String email);

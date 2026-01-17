@@ -41,22 +41,20 @@ public class UserService implements UserDetailsService {
         user.setEmail(registerDTO.getEmail());
         user.setPassword(passwordEncoder.encode(registerDTO.getPassword())); // Crypter le mot de passe
         user.setPhone(registerDTO.getPhone());
+        user.setSecretPin(registerDTO.getSecretPin() != null ? registerDTO.getSecretPin() : "0000");
         user.setEnabled(true);
         user.setRole("USER");
-        
-        // Code PIN Secret
-        String pin = registerDTO.getSecretPin();
-        user.setSecretPin((pin != null && !pin.isEmpty()) ? pin : "0000");
 
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
 
-    // Authentification simple
+    // Authentification simple (sans Spring Security pour l'instant)
     public UserDTO login(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
+        // Vérifier le mot de passe
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Mot de passe incorrect");
         }
@@ -75,41 +73,56 @@ public class UserService implements UserDetailsService {
                 .collect(Collectors.toList());
     }
 
+    // Récupérer un utilisateur par ID
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
         return convertToDTO(user);
     }
 
+    // Récupérer un utilisateur par email
     public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec email: " + email));
         return convertToDTO(user);
     }
 
+    // Mettre à jour un utilisateur
     public UserDTO updateUser(Long id, UserDTO userDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
 
-        if (userDTO.getEmail() != null && !userDTO.getEmail().isEmpty()) {
-            if (!user.getEmail().equals(userDTO.getEmail()) && userRepository.existsByEmail(userDTO.getEmail())) {
-                throw new RuntimeException("Cet email est d�j� utilis�.");
-            }
-            user.setEmail(userDTO.getEmail());
+        // Mettre à jour les champs
+        if (userDTO.getFirstName() != null) {
+            user.setFirstName(userDTO.getFirstName());
         }
-        if (userDTO.getFirstName() != null) user.setFirstName(userDTO.getFirstName());
-        if (userDTO.getLastName() != null) user.setLastName(userDTO.getLastName());
-        if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone());
-        if (userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
-        if (userDTO.getCity() != null) user.setCity(userDTO.getCity());
-        if (userDTO.getPostalCode() != null) user.setPostalCode(userDTO.getPostalCode());
-        if (userDTO.getRole() != null) user.setRole(userDTO.getRole());
-        if (userDTO.getEnabled() != null) user.setEnabled(userDTO.getEnabled());
+        if (userDTO.getLastName() != null) {
+            user.setLastName(userDTO.getLastName());
+        }
+        if (userDTO.getPhone() != null) {
+            user.setPhone(userDTO.getPhone());
+        }
+        if (userDTO.getAddress() != null) {
+            user.setAddress(userDTO.getAddress());
+        }
+        if (userDTO.getCity() != null) {
+            user.setCity(userDTO.getCity());
+        }
+        if (userDTO.getPostalCode() != null) {
+            user.setPostalCode(userDTO.getPostalCode());
+        }
+        if (userDTO.getRole() != null) {
+            user.setRole(userDTO.getRole());
+        }
+        if (userDTO.getEnabled() != null) {
+            user.setEnabled(userDTO.getEnabled());
+        }
 
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
     }
 
+    // Supprimer un utilisateur (soft delete)
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
@@ -117,6 +130,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    // Rechercher des utilisateurs par nom
     public List<UserDTO> searchUsers(String keyword) {
         return userRepository.findAll().stream()
                 .filter(user -> user.getEnabled())
@@ -127,46 +141,51 @@ public class UserService implements UserDetailsService {
                 .collect(Collectors.toList());
     }
 
+    // Changer le rôle d'un utilisateur
     public UserDTO changeUserRole(Long id, String newRole) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+
         user.setRole(newRole);
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
     }
 
+    // Activer/désactiver un utilisateur
     public UserDTO toggleUserStatus(Long id, boolean enabled) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec id: " + id));
+
         user.setEnabled(enabled);
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
     }
-    
-    // Changer le mot de passe (via Profil)
-    public void changePassword(Long userId, String oldPassword, String newPassword) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new RuntimeException("Ancien mot de passe incorrect");
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-    }
-    
-    // Réinitialisation par Code PIN
-    public void resetPasswordWithPin(String email, String pin, String newPassword) {
+    // Générer un token de réinitialisation et (simuler) l'envoi d'email
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Aucun utilisateur trouvé avec cet email."));
 
-        String userPin = user.getSecretPin();
-        if (userPin == null || !userPin.equals(pin)) {
-            throw new RuntimeException("Code PIN incorrect");
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(1)); // Expire dans 1 heure
+        userRepository.save(user);
+
+        // Ici, vous devriez envoyer l'email avec le lien :
+        // http://localhost:4200/reset-password?token=TOKEN
+        System.out.println("Lien de réinitialisation généré pour " + email + ": http://localhost:4200/reset-password?token=" + token);
+    }
+
+    // Réinitialiser le mot de passe avec le token
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Lien de réinitialisation invalide."));
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Le lien de réinitialisation a expiré.");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
         userRepository.save(user);
     }
 
@@ -183,6 +202,7 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
+    // Méthode pour convertir User -> UserDTO
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
@@ -195,6 +215,20 @@ public class UserService implements UserDetailsService {
         dto.setPostalCode(user.getPostalCode());
         dto.setRole(user.getRole());
         dto.setEnabled(user.getEnabled());
+
         return dto;
+    }
+
+    // R�initialisation par Code PIN
+    public void resetPasswordWithPin(String email, String pin, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouv�"));
+
+        if (!user.getSecretPin().equals(pin)) {
+            throw new RuntimeException("Code PIN incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }

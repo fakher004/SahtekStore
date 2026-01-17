@@ -77,13 +77,24 @@
                         </div>
                     </div>
 
-                    <div class="form-floating mb-4">
+                    <div class="form-floating mb-3">
                         <input type="password" id="password" formControlName="password" class="form-control"
                             placeholder="Password">
                         <label for="password"><i class="bi bi-lock me-2"></i>Password</label>
                         <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
                             class="error-text">
                             Min. 6 characters required.
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input type="text" id="secretPin" formControlName="secretPin" class="form-control"
+                            placeholder="Code PIN (Secret)" maxlength="6">
+                        <label for="secretPin"><i class="bi bi-shield-lock me-2"></i>Code PIN Secret (4-6
+                            chiffres)</label>
+                        <div *ngIf="registerForm.get('secretPin')?.invalid && registerForm.get('secretPin')?.touched"
+                            class="error-text">
+                            PIN de 4 à 6 chiffres requis. Utilisé pour récupérer le compte.
                         </div>
                     </div>
 

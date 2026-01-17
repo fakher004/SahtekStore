@@ -98,6 +98,11 @@
                                 </div>
                             </div>
                             <hr class="dropdown-divider">
+                            <a *ngIf="!isAdmin" routerLink="/profile" class="dropdown-btn"
+                                (click)="showProfileDropdown = false">
+                                <i class="bi bi-person-gear me-2"></i>
+                                Mon Profil
+                            </a>
                             <button class="dropdown-btn logout-btn" (click)="logout()">
                                 <i class="bi bi-box-arrow-right me-2"></i>
                                 Déconnexion

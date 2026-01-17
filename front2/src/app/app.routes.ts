@@ -8,12 +8,16 @@ import { ProductFormComponent } from './features/admin/product-form/product-form
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
 
+import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
+
 export const routes: Routes = [
     { path: '', component: HomeComponent, canActivate: [authGuard] },
+    { path: 'profile', loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent), canActivate: [authGuard] },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
-    { path: 'forgot-password', loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) },
-    { path: 'reset-password', loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
+    { path: 'forgot-password', component: ForgotPasswordComponent },
+    { path: 'reset-password', component: ResetPasswordComponent },
     {
         path: 'admin',
         component: AdminLayoutComponent,
